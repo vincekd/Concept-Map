@@ -1,0 +1,60 @@
+#text-box {
+    display:none;
+    position:absolute;
+    top:0px;
+/*    margin-left:50px;
+    width:300px;	
+    height:200px;*/
+    background-color:#D1D1D1;
+    text-align:center;
+    padding:10px;
+    margin:0px;
+    border-radius:5px;
+}
+
+#text-box a {
+    color:#00F !important;
+}
+#quit {
+    float:left;
+}
+#submit {
+    float:right;
+}
+#text-input {
+    padding:5px;
+}
+
+#justify_connect, #delete_connect, #add_text {
+    display:none;
+}
+/*
+#popdown {
+    position:absolute;
+    top:0px;
+    left:0px;
+    width:400px;
+    height:300px;
+    margin:auto;
+    color:black;
+}
+#cont {
+    position:absolute;
+    display:none;
+    top:0px;
+    left:0px;
+    right:0px;
+    bottom:0px;
+    z-index: 1000;
+    width:100%;
+    background: rgba(0,0,0,.5);
+}
+*/
+#canvas, .canvas {
+    border:1px solid black;
+    position:relative;
+}
+
+#containter {
+    position:relative;
+}
