@@ -17,15 +17,17 @@ if( ! $has_params ){
 	print '<button type="button" id="view_selected">View</button>';
 	return;
 }
+
 print $html->css( array( 'concept_map' ), false );
-//foreach response, create canvas
+//for each response, create canvas
 $id = 0;
 foreach( $maps as $map ){
 	print '<div class="map">';
 	print '<input type="hidden" class="map_values" value=\'' . $map . '\'/>';
 	print '<canvas class="canvas" id="canvas' . $id++ . '" width="570" height="500"></canvas>';
-	print '<div><button type="button" class="play_button">Play</button></div>';
+	print '<div class="controls"><button type="button" class="play_button">[Re]Start</button></div>';
 	print '</div><br/>';
 }
 print $javascript->link( 'concept_map' );
+
 ?>

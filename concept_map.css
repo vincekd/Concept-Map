@@ -28,33 +28,42 @@
 #justify_connect, #delete_connect, #add_text {
     display:none;
 }
-/*
-#popdown {
-    position:absolute;
-    top:0px;
-    left:0px;
-    width:400px;
-    height:300px;
-    margin:auto;
-    color:black;
-}
-#cont {
-    position:absolute;
-    display:none;
-    top:0px;
-    left:0px;
-    right:0px;
-    bottom:0px;
-    z-index: 1000;
-    width:100%;
-    background: rgba(0,0,0,.5);
-}
-*/
 #canvas, .canvas {
     border:1px solid black;
     position:relative;
+    cursor:pointer;
 }
 
 #containter {
     position:relative;
+}
+
+._cm_controls {
+    width:572px;
+    border:1px solid #000;
+    cursor:pointer;
+    /*float:right;
+    margin-right:18px;*/
+}
+
+._cm_controls .list td {
+    text-align:center;
+    border:none;
+}
+
+._cm_canvas_pause {
+    min-width:35px;
+    max-width:35px;
+    width:35px;
+    background:#CCC;
+    background-image: linear-gradient(bottom, rgb(255,255,255) 0%, rgb(204,204,204) 50%, rgb( 255,255,255 ) 100%);
+    background-image: -moz-linear-gradient(bottom, rgb(255,255,255) 0%, rgb(204,204,204) 50%,rgb( 255,255,255 ) 100%);
+    background-image: -webkit-linear-gradient(bottom, rgb(255,255,255) 0%, rgb(204,204,204) 50%,rgb( 255,255,255 ) 100%);
+}
+
+._cm_canvas_pause:hover {
+    background:#CCC;
+    background-image: linear-gradient(bottom, rgb(204,204,204) 0%, rgb(255,255,255) 50%, rgb( 204,204,204 ) 100%);
+    background-image: -moz-linear-gradient(bottom, rgb(204,204,204) 0%, rgb(255,255,255) 50%, rgb( 204,204,204 ) 100%);
+    background-image: -webkit-linear-gradient(bottom, rgb(204,204,204) 0%, rgb(255,255,255) 50%, rgb( 204,204,204 ) 100%);
 }

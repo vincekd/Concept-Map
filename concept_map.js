@@ -8,7 +8,7 @@ function Circle( id, x, y, canvas ){
     this.d = (this.r*2);
     this.m_r = (this.r + (this.r/4));
     this.canvas = canvas.canvas;
-    this.connections = [];
+    this.connections = {};
     this.txt = "";
     this.menu = false;
     this.deleted = false;
@@ -86,12 +86,12 @@ function Circle( id, x, y, canvas ){
     };
 
     this.drawMenu = function( ){
-	var that = this;
+	var xx, yy, grd, ctx, that = this;
 	that.menu = true;
 	if(that.canvas.getContext){
-	    var ctx = that.canvas.getContext("2d");
+	    ctx = that.canvas.getContext("2d");
 	    ctx.beginPath();
-	    var grd = ctx.createRadialGradient( that.x, that.y, 0, that.x, that.y, that.m_r );
+	    grd = ctx.createRadialGradient( that.x, that.y, 0, that.x, that.y, that.m_r );
 	    grd.addColorStop( 0,"#CCC" );
 	    grd.addColorStop( 1, "#944" );
 	    ctx.fillStyle=grd;
@@ -109,8 +109,8 @@ function Circle( id, x, y, canvas ){
 	    ctx.moveTo( that.x, that.y );
 	    ctx.lineTo( that.x, that.y + that.m_r );
 	    ctx.moveTo( that.x, that.y );
-	    var xx = that.m_r * (Math.cos( 210 * Math.PI / 180 )) + that.x;
-	    var yy = that.m_r * (Math.sin( 210 * Math.PI / 180 )) + that.y;
+	    xx = that.m_r * (Math.cos( 210 * Math.PI / 180 )) + that.x;
+	    yy = that.m_r * (Math.sin( 210 * Math.PI / 180 )) + that.y;
 	    ctx.lineTo( xx, yy ); // upper right
 	    ctx.moveTo( that.x, that.y );
 	    xx = that.m_r * (Math.cos( 330 * Math.PI / 180 )) + that.x;
@@ -120,7 +120,7 @@ function Circle( id, x, y, canvas ){
 	    ctx.closePath();
 	    
 	    ctx.beginPath();
-	    ctx.fillStyle = "#000000";
+	    ctx.fillStyle = "#000";
 	    //ctx.font = "16px Monospace";
 	    ctx.font = "14px Arial";
 	    ctx.textAlign = "center";
@@ -129,7 +129,7 @@ function Circle( id, x, y, canvas ){
 	    ctx.closePath();
 
 	    ctx.beginPath();
-	    ctx.fillStyle = "#000000";
+	    ctx.fillStyle = "#000";
 	    //ctx.font = "16px Monospace";
 	    ctx.font = "14px Arial";
 	    ctx.textAlign = "center";
@@ -138,7 +138,7 @@ function Circle( id, x, y, canvas ){
 	    ctx.closePath();
 
 	    ctx.beginPath();
-	    ctx.fillStyle = "#000000";
+	    ctx.fillStyle = "#000";
 	    //ctx.font = "16px Monospace";
 	    ctx.font = "14px Arial";
 	    ctx.textAlign = "center";
@@ -163,7 +163,7 @@ function Canvas( id ){
     this.cur = {};
     this.editable = true;
 
-    this.getCirclePoints = function getCirclePoints( x1, y1, x2, y2, r, h ){
+    this.getCirclePoints = function( x1, y1, x2, y2, r, h ){
 	var y1_t = h - y1;
 	var y2_t = h - y2;
 	var angle = Math.atan2( (y2_t - y1_t), (x2-x1) );
@@ -181,6 +181,14 @@ function Canvas( id ){
     function getDistance( x1, y1, x2, y2 ){
 	return Math.sqrt( Math.pow( Math.abs( x1 - x2 ), 2 ) + Math.pow( Math.abs( y1 - y2 ), 2 ) );
     }
+    
+    this.connectCircles = function( from, to ){
+	var that = this,
+	distance = getDistance( from.x, from.y, to.x, to.y );
+	if( distance > that.d ){
+	    that.drawLine( that.getCirclePoints( from.x, from.y, to.x, to.y, that.r, that.h ) );
+	}
+    }
 
     this.draw = function( ){
 	var that = this;
@@ -194,16 +202,12 @@ function Canvas( id ){
 	    ctx.closePath();
 	    for( var i in that.nodes ){
 		if( that.nodes[i].deleted === false ){
-		    for( var j = 0; j < that.nodes[i].connections.length; j ++ ){
-			var othCir = that.nodes[that.nodes[i].connections[j]];
+		    for( var j in that.nodes[i].connections ){
+			var othCir = that.nodes[j];
 			if( othCir.deleted === false ){
 
-			    var distance = getDistance( that.nodes[i].x, that.nodes[i].y, othCir.x, othCir.y );
+			    this.connectCircles( that.nodes[i], othCir );
 
-			    if( distance > that.d ){
-				that.drawLine( that.getCirclePoints( that.nodes[i].x, that.nodes[i].y,
-								othCir.x, othCir.y, canvas.r, canvas.h ) );
-			    }
 			}
 		    }
 		}
@@ -221,24 +225,26 @@ function Canvas( id ){
 
     this.replay = function( ){
 	var that = this, done = false,
-	ordered = [], sleep = 1000,
-	start, node, i, doneArr = [];
+	ordered = [], sleep,
+	start, tmp, node, j, i, doneArr = [],
+	defaults = [];
 	for( i in that.nodes ){
 	    node = that.nodes[i];
-// 	    if( node.adefault === true ){
-// 		doneArr.push({
-// 		    'time' : node.created,
-// 		    'cod' : 'created',
-// 		    'node' : node
-// 		});
-// 		if( !!node.txt ){
-// 		    doneArr.push({
-// 			'time' : node.txt_added,
-// 			'cod' : 'text_added',
-// 			'node' : node
-// 		    });
-// 		}
-// 	    } else {
+	    if( node.adefault === true ){
+		defaults.push({
+		    'time' : node.created,
+		    'cod' : 'created',
+		    'node' : node
+		});
+		if( !!node.txt ){
+		    defaults.push({
+			'time' : node.txt_added,
+			'cod' : 'text_added',
+			'node' : node
+		    });
+		}
+	    } else {
+		//to be replayed
 		ordered.push({
 		    'time' : node.created,
 		    'cod' : 'created',
@@ -258,47 +264,107 @@ function Canvas( id ){
 			'node' : node
 		    });
 		}
-//	    }
+	    }
+	    for( j in node.connections ){
+		ordered.push({
+		    'time' : node.connections[j],
+		    'cod' : 'connection',
+		    'to' : j,
+		    'node' : node.id
+		});
+	    }
 	}
 	
 	ordered = ordered.sort(function( n1, n2 ){
-	    return n2.time - n1.time;
+	    return n1.time - n2.time;
 	});
-	that.canvas.width = that.w;
+
+	//if already going, restart
 	if( !!window.timedCanvas && !!window.timedCanvas.time ){
 	    window.clearTimeout( window.timedCanvas.time );
 	}
-	window.timedCanvas = {};
-	window.timedCanvas.timePlay = function(){
-	    var i, next = ordered.pop();
-	    //if no more elements in arr
-	    if( next === undefined || next === null ){
-		window.clearTimeout( window.timedCanvas.time );
-		that.draw();
-		window.timedCanvas = null;
-		return;
-	    } else if( next.cod === "created" ){
-		doneArr.push( next );
-		next.node.drawCircle();
-	    } else if( next.cod === "deleted" ){
-		that.canvas.width = that.w;
-		for( i = 0; i < doneArr.length; i++ ){
-		    if( doneArr[i].node !== next.node ){
-			if( doneArr[i].cod === "created" ){
-			    doneArr[i].node.drawCircle();
-			} else if( doneArr[i].cod === "text_added" ){
-			    doneArr[i].node.writeText();
-			}
-		    }
+	
+	window.timedCanvas = {
+	    'canv' : that,
+	    'sleep' : 1000,
+	    'ordered_list' : ordered,
+	    'controller' : (function(){
+		return function( point ){
+		    //window.timedCanvas.pause();
+		    window.timedCanvas.canv.canvas.width = window.timedCanvas.canv.w;
+		    drawArr( defaults, window.timedCanvas.canv );
+		    drawArr( ordered.slice( 0, point ), window.timedCanvas.canv );
+		    window.timedCanvas.tracker( point, ordered.length );
+		    window.timedCanvas.tracker_back( point );
+		    window.timedCanvas.current_step = point;
+		    //window.timedCanvas.start();
+		};
+	    }()),
+	    'pause' : function(){
+		var that = this;
+		window.clearTimeout( that.time );
+	    },
+	    'stop' : function(){
+		window.timedCanvas.pause();
+		window.jQuery( "#_cm_canvas_" + window.timedCanvas.canv.canvas.id + "pause" ).click();
+		window.timedCanvas.current_step = 0;
+	    },
+	    'current_step' : 0,
+	    'start' : function(){
+		var i, canv = that;
+		//create vars instead of window.[yadda]
+		if( window.timedCanvas.current_step === 0 ){
+		    canv.canvas.width = that.w;
+		    window.timedCanvas.tracker( 0, ordered.length );
+		    drawArr( defaults ); //before start
 		}
-	    } else if( next.cod === "text_added" ){
-		doneArr.push( next );
-		next.node.writeText();
+		drawArr( ordered.slice( 0, window.timedCanvas.current_step ), canv );
+		window.timedCanvas.tracker_back( window.timedCanvas.current_step );
+		window.timedCanvas.current_step++;
+		if( window.timedCanvas.current_step <= ordered.length ){
+		    window.timedCanvas.time = 
+			window.setTimeout( "window.timedCanvas.start()", window.timedCanvas.sleep );
+		} else {
+		    window.timedCanvas.stop();
+		}
+	    },
+	    'tracker' : function( point, num ){
+		for( var i = point; i <= num; i++ ){
+		    window.jQuery( "#_cm_canvas_" + window.timedCanvas.canv.canvas.id + 
+				   "seg" + i ).css( "background", "#FFF" );
+		}
+	    },
+	    'tracker_back' : function( point ){
+		for( var i = 0; i <= point; i++ ){
+		    window.jQuery( "#_cm_canvas_" + window.timedCanvas.canv.canvas.id + 
+				   "seg" + i ).css( "background", "#944" );		    
+		}
 	    }
-	    window.timedCanvas.time = 
-		window.setTimeout( "window.timedCanvas.timePlay()", sleep );
 	}
-	window.timedCanvas.timePlay();
+	window.timedCanvas.start();
+
+	function drawArr( arr ){
+	    for( i = 0; i < arr.length; i++ ){	    
+		if( arr[i].cod === "created" ){
+		    arr[i].node.drawCircle();
+		} else if( arr[i].cod === "text_added" ){
+		    arr[i].node.writeText();
+		} else if( arr[i].cod === "connection" ){
+		    arguments[1].connectCircles( that.nodes[arr[i].node], that.nodes[arr[i].to] );
+		} else if( arr[i].cod === "deleted" ){
+		    doneArr = ordered.filter(function( element, index, array ){
+			var id = arr[i].node.id;
+			if( element.cod !== "connection" ){
+			    return (element.node.id !== id );
+			}
+			return (element.node !== id && element.to !== id );
+		    });
+		    drawArr( defaults, arguments[1] );
+		    drawArr( doneArr.slice( 0, i ), arguments[1] );
+		}
+	    }
+	}
+
     };
 
     this.getId = function(){
@@ -311,7 +377,7 @@ function Canvas( id ){
 	    var ctx = that.canvas.getContext("2d");
 	    ctx.beginPath();
 	    ctx.strokeStyle = "#944";
-	    //ctx.strokeStyle = "#000000";
+	    //ctx.strokeStyle = "#000";
 	    ctx.lineWidth = 6;
 	    ctx.moveTo( obj.x1, obj.y1 );
 	    ctx.lineTo( obj.x2, obj.y2 );
@@ -321,7 +387,7 @@ function Canvas( id ){
 	    
 	    //add arrow head
 	    // 	    ctx.beginPath();
-	    // 	    ctx.strokeStyle = "#000000";
+	    // 	    ctx.strokeStyle = "#000";
 	    // 	    ctx.lineWidth = 4;
 	    // 	    var _x_ = obj.x2 - obj.x1;
 	    // 	    var _y_ = obj.y2 - obj.y1;
@@ -357,10 +423,8 @@ function Canvas( id ){
     };
     
     this.checkCircles = function( x, y ){
-	var that = this;
-	var check;
-	var distance;
-	for( var i in that.nodes ){
+	var i, check, distance, that = this;
+	for( i in that.nodes ){
 	    if( that.nodes[i].deleted === false ){
 		check = that.nodes[i].r;
 		if( that.nodes[i].menu ){
@@ -368,7 +432,6 @@ function Canvas( id ){
 		}
 		distance = Math.sqrt( Math.pow( Math.abs( that.nodes[i].x - x ), 2 ) +
 				      Math.pow( Math.abs( that.nodes[i].y - y ), 2 ) );
-
 		if( distance < check ){
 		    return that.nodes[i];
 		}
@@ -425,8 +488,8 @@ function Canvas( id ){
 	var that = this;
 	for( var i in that.nodes ){
 	    if( that.nodes[i].deleted === false ){
-		for( var j = 0; j < that.nodes[i].connections.length; j ++ ){
-		    var othCir = that.nodes[that.nodes[i].connections[j]];
+		for( var j in that.nodes[i].connections ){
+		    var othCir = that.nodes[j];
 		    if( othCir.deleted === false ){
 			var obj = that.getCirclePoints( that.nodes[i].x, that.nodes[i].y,
 							othCir.x, othCir.y, canvas.r, canvas.h );
@@ -443,6 +506,28 @@ function Canvas( id ){
 	}
 	return false;
     };
+
+    //event bindings
+    //replace all event binding below with this
+    //need to make ids more obscure
+    //if text boxes don't exist, must create them
+    //bring Circle object within Canvas ?prototype?
+    this.initialize = function( canvas_id ){
+	function click( ev ){
+	    
+	}
+	
+	function dblclick( ev ){
+	    
+	}
+
+	function mousedown( ev ){
+	    
+	}
+	function readPopClicks( obj ){
+
+	}
+    }
 }
 
 function readPopClicks( obj ){
@@ -482,8 +567,7 @@ function readPopClicks( obj ){
 	} else if( event.target.id === "submit" && $("#delete_connect").is( ":visible" ) ){
 	    $(document).unbind( "click" );
 	    var line = obj;
-	    var index = canvas.nodes[line.from].connections.indexOf( line.to );
-	    canvas.nodes[line.from].connections.splice( index, 1 );
+	    delete canvas.nodes[line.from].connections[line.to];
 	    $("#text-box").fadeOut( "fast", function(){
 		$("#text-input").val( "" );
 		$("#delete_connect").hide();
@@ -528,10 +612,12 @@ function onReady( ){
 	    tmp.fromJson( val );
 	    canvi[canv] = tmp;
 	}
-	jQuery(".play_button").bind( "click", function( ev ){
-	    var el = jQuery( ev.currentTarget );
-	    var canv  = el.parent().siblings( 'canvas' ).attr( 'id' );
+	$(".play_button").bind( "click", function( ev ){
+	    var controls, canv, el = $( ev.currentTarget );
+	    controls = el.parent();
+	    canv  = controls.siblings( 'canvas' ).attr( 'id' );
 	    canvi[canv].replay();
+	    controls.html( buildControls( window.timedCanvas.ordered_list.length, canv ) );
 	});
 	return false;
     }
@@ -553,11 +639,12 @@ function onReady( ){
     });
 
     $(canvas_el).bind( "dblclick", function( event ){
+	//console.log( event );
 	if( canvas.editable || !! window.concept_admin ){
 	    event.stopPropagation();
 	    event.preventDefault();
-	    var x = event.layerX;
-	    var y = event.layerY;
+	    var x = event.offsetX;
+	    var y = event.offsetY;
 	    if( canvas.checkCircles( x, y ) === false ){
 		var circle = new Circle( canvas.getId(), x, y, canvas);
 		canvas.nodes[circle.id] = circle;
@@ -567,18 +654,19 @@ function onReady( ){
 	return false;
     });
     $(canvas_el).bind( "mousedown", function( event ){
+	//console.log( event );
 	if( event.button !== 0 || !! canvas.cur.c ){
 	    return;
 	}
-	var x = event.layerX;
-	var y = event.layerY;
+	var x = event.offsetX;
+	var y = event.offsetY;
 	var circ = canvas.checkCircles( x, y );
 	if( circ !== false && ! circ.menu ) {
 	    canvas.cur.c = circ;
 	    canvas.cur.change = false;
 	    $(canvas_el).bind( "mousemove", function( event  ){
-		canvas.cur.c.x = event.layerX;
-		canvas.cur.c.y = event.layerY;
+		canvas.cur.c.x = event.offsetX;
+		canvas.cur.c.y = event.offsetY;
 		canvas.draw();
 		canvas.cur.change = true;
 	    });
@@ -589,11 +677,12 @@ function onReady( ){
 	}
     });
     $(canvas_el).bind( "click", function( event ){
+	//console.log( event );
 	if( event.button !== 0 ){
 	    return;
 	}
-	var x = event.layerX;
-	var y = event.layerY;
+	var x = event.offsetX;
+	var y = event.offsetY;
 	var circ = canvas.checkCircles( x, y );
 	if( canvas.cur.change ){
 	    canvas.cur.change = false;
@@ -612,9 +701,10 @@ function onReady( ){
 		if( angle >= 210 && angle <= 330 ){
 		    canvas.cur.con.menu = false;
 		    $(canvas_el).bind( "mousemove", function( event ){
-			var _x = event.layerX;
-			var _y = event.layerY;
-			var o = canvas.getCirclePoints( canvas.cur.con.x, canvas.cur.con.y, _x, _y, canvas.r, canvas.h );
+			var _x = event.offsetX;
+			var _y = event.offsetY;
+			var o = canvas.getCirclePoints( canvas.cur.con.x, canvas.cur.con.y,
+							_x, _y, canvas.r, canvas.h );
 			o.x2 = _x;
 			o.y2 = _y;
 			canvas.draw();
@@ -634,11 +724,8 @@ function onReady( ){
 		if( !! canvas.cur.con ){
 		    $(canvas_el).unbind( "mousemove" );
 		    if( canvas.cur.con !== canvas.cur.c ){
-			if( canvas.cur.con.connections.indexOf( canvas.cur.c.id ) === -1 ){
-			    canvas.cur.con.connections.push( canvas.cur.c.id );
-			    //to add justifications
-			    //$("#justify_connect").show();
-			    //getMenuBox( x, y );
+			if( canvas.cur.con.connections[canvas.cur.c.id] === undefined ){
+			    canvas.cur.con.connections[canvas.cur.c.id] = (new Date()).getTime();
 			}
 		    }
 		    canvas.cur = {};
@@ -662,6 +749,36 @@ function onReady( ){
 	    }
 	}
     });
+
+    function buildControls( num, cm_id ){
+	var i, div = $('<table />').addClass("_cm_controls"),
+	ul = $('<tr />').addClass("list"),
+	butt = $('<td />').attr( 'id', "_cm_canvas_" + cm_id + "pause" ).
+	    text( "Pause" ).addClass( "_cm_canvas_pause" ).
+	    bind( "click", function( ev ){
+		var el = jQuery(ev.currentTarget);
+		if( el.text() === "Pause" ){
+		    window.timedCanvas.pause();
+		    el.text( "Play" );
+		} else {
+		    window.timedCanvas.start();
+		    el.text( "Pause" );
+		}
+	    });
+	ul.append( butt );
+	for( i = 1; i <= num; i++ ){
+	    var el = $('<td/>').attr( 'id', ("_cm_canvas_" + cm_id + "seg" + i) ).
+		html( "&bull;" );
+	    el.bind( "click", function( ev ){
+		var el = jQuery(ev.currentTarget);
+		var num = parseInt( el.attr( 'id' ).replace( /.*seg/, "" ), 10 );
+		window.timedCanvas.controller( num );
+	    });
+	    ul.append( el );
+	}
+	div.append( ul );
+	return div;
+    }
 }
 
 jQuery( onReady );
