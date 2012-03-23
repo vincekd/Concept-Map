@@ -3,6 +3,10 @@
     <link rel="stylesheet" type="text/css" href="/Concept-Map/concept_map.css"/>
   </head>
   <body>
+    <div id="instructions">
+      Double click on the canvas to create a node.  Click on a node to add text, delete it, or connect it to another node.
+      Click and drag to move.  Click "Start" to start a replay of what has been done so far.
+    </div>
     <div class="concept_map_div_class">
       <input type="hidden" class="map_values"/>
       <canvas class="_cm_canvas" id="concept_map_canvas" width="570" height="500"></canvas>
@@ -20,7 +24,7 @@
         <a id="quit" href="javascript:;">Cancel</a>
 	<a id="submit" href="javascript:;">Submit</a>
       </div>
-      <div class="controls"><button type="button" class="play_button">[Re]Start</button></div>
+      <div class="controls"><button type="button" class="play_button">Start Replay</button></div>
     </div><br/>
     <script type="text/javascript" src="jquery-min.js"></script>
     <script type="text/javascript" src="concept_map.js"></script>
