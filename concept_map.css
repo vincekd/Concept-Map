@@ -28,7 +28,7 @@
 #justify_connect, #delete_connect, #add_text {
     display:none;
 }
-#canvas, .canvas {
+._cm_canvas {
     border:1px solid black;
     position:relative;
     cursor:pointer;
@@ -44,6 +44,10 @@
     cursor:pointer;
     /*float:right;
     margin-right:18px;*/
+}
+
+.concept_map_div_class {
+    position:relative;
 }
 
 ._cm_controls .list td {

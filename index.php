@@ -1,33 +1,28 @@
-<?php 
-if( ! $has_params ){
-	//pr( $maps );
-	print '<table><thead><tr><th>Name</th><th>Id</th><th>Interview</th><th>Created</th>';
-	print '<th>View</th></tr></thead>';
-	print '<tbody>';
-	foreach( $maps as $arr ){
-		print '<tr>';
-		print '<td>' . $arr['name'] . '</td>';
-		print '<td>' . $arr['user_id'] . '</td>';
-		print '<td>' . $arr['interview']['name'] . '</td>';
-		print '<td>' . $arr['created'] . '</td>';
-		print '<td><input type="checkbox"/></td>';
-		print '</tr>';
-	}
-	print '</tbody></table>';
-	print '<button type="button" id="view_selected">View</button>';
-	return;
-}
-
-print $html->css( array( 'concept_map' ), false );
-//for each response, create canvas
-$id = 0;
-foreach( $maps as $map ){
-	print '<div class="map">';
-	print '<input type="hidden" class="map_values" value=\'' . $map . '\'/>';
-	print '<canvas class="canvas" id="canvas' . $id++ . '" width="570" height="500"></canvas>';
-	print '<div class="controls"><button type="button" class="play_button">[Re]Start</button></div>';
-	print '</div><br/>';
-}
-print $javascript->link( 'concept_map' );
-
-?>
+<html>
+  <head>
+    <link rel="stylesheet" type="text/css" href="/Concept-Map/concept_map.css"/>
+  </head>
+  <body>
+    <div class="concept_map_div_class">
+      <input type="hidden" class="map_values"/>
+      <canvas class="_cm_canvas" id="concept_map_canvas" width="570" height="500"></canvas>
+      <div id="text-box">
+        <div id="add_text">
+	  <input type="text" id="text-input"/><br />
+	</div>
+	<div id="justify_connect">
+	  Why did you connect these ideas?
+	  <textarea id="text_area"></textarea>
+	</div>
+	<div id="delete_connect">
+	  Are you sure you want to delete this line?
+	</div>
+        <a id="quit" href="javascript:;">Cancel</a>
+	<a id="submit" href="javascript:;">Submit</a>
+      </div>
+      <div class="controls"><button type="button" class="play_button">[Re]Start</button></div>
+    </div><br/>
+    <script type="text/javascript" src="jquery-min.js"></script>
+    <script type="text/javascript" src="concept_map.js"></script>
+  </body>
+</html>
