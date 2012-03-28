@@ -1,27 +1,52 @@
 jQuery.noConflict();
-function Concept_Map_Canvas( id, tc ){
+function Concept_Map_Canvas( id ){
     "use strict";
-    //TODO: read in old items
-    //TODO: separate from jQuery?
-    //TODO: more editable checks in events
-
     this.canvas = document.getElementById( id );
-    this.hid = id;
-    this.tc = tc;
     (function(canvas, that, window, $){
 	that.id = 100;
-	//circle radius/diameter
 	that.r = 40;
 	that.d = (that.r*2);
-	//canvas height/width
 	that.w = canvas.width;
 	that.h = canvas.height;
-	//circles
 	that.nodes = {};
-	//currently active, for events
 	that.cur = {};
-	//can be edited
 	that.editable = true;
+
+	//TODO: read in old items
+	//TODO: separate from jQuery?
+
+	// var el = jQuery( '#concept_map' ) || null;
+	// if( el.length > 0 && el !== null ){
+	// 	var str = JSON.parse( el.val() );
+	// 	if( typeof str === "string" ){
+	// 	    canvas.fromJson( str );
+	// 	} else {
+	// 	    canvas.fromJson( el.val() );
+	// 	}
+	// } else {
+	// 	var els = $( '.map' );
+	// 	var val, canv, tmp;
+	// 	window.canvi = {};
+	// 	for( var i = 0; i < els.length; i++ ){
+	// 	    el = $(els[i]);
+	// 	    val = el.find( '.map_values' ).val();
+	// 	    canv = el.find( '.canvas' ).attr( 'id' );
+	// 	    tmp = new Concept_Map_Canvas( canv );
+	// 	    tmp.fromJson( val );
+	// 	    canvi[canv] = tmp;
+	// 	}
+
+	// 	return false;
+	// }
+
+	//TODO: rename .play_button class
+	$(".play_button").bind( "click", function( ev ){
+	    var controls, canv, el = $( ev.currentTarget );
+	    controls = el.parent();
+	    canv = controls.siblings( 'canvas' ).attr( 'id' );
+	    window[canv].replay();
+	    controls.html( buildControls( window.timedCanvas.ordered_list.length, canv ) );
+	});
 
 	//TODO: rename text-input
 	$("#text-input").bind( "keypress", function( event ){
@@ -44,30 +69,29 @@ function Concept_Map_Canvas( id, tc ){
 	    if( that.editable ){
 		event.stopPropagation();
 		event.preventDefault();
-		var x = event.offsetX || event.layerX;
-		var y = event.offsetY || event.layerY;
+		var x = event.offsetX;
+		var y = event.offsetY;
 		if( that.checkCircles( x, y ) === false ){
 		    var circle = new Circle( that.getId(), x, y, that );
 		    that.nodes[circle.id] = circle;
 		    that.draw();
 		}
 	    }
-	    //return false;
+	    return false;
 	});
-
 	$(that.canvas).bind( "mousedown", function( event ){
 	    if( event.button !== 0 || !! that.cur.c ){
 		return;
 	    }
-	    var x = event.offsetX || event.layerX;
-	    var y = event.offsetY || event.layerY;
+	    var x = event.offsetX;
+	    var y = event.offsetY;
 	    var circ = that.checkCircles( x, y );
 	    if( circ !== false && ! circ.menu ) {
 		that.cur.c = circ;
 		that.cur.change = false;
 		$(that.canvas).bind( "mousemove", function( event  ){
-		    that.cur.c.x = event.offsetX || event.layerX;
-		    that.cur.c.y = event.offsetY || event.layerY;
+		    that.cur.c.x = event.offsetX;
+		    that.cur.c.y = event.offsetY;
 		    that.draw();
 		    that.cur.change = true;
 		});
@@ -83,8 +107,8 @@ function Concept_Map_Canvas( id, tc ){
 	    if( event.button !== 0 ){
 		return;
 	    }
-	    var x = event.offsetX || event.layerX;
-	    var y = event.offsetY || event.layerY;
+	    var x = event.offsetX;
+	    var y = event.offsetY;
 	    var circ = that.checkCircles( x, y );
 	    if( that.cur.change ){
 		that.cur.change = false;
@@ -103,8 +127,8 @@ function Concept_Map_Canvas( id, tc ){
 		    if( angle >= 210 && angle <= 330 ){ //connect
 			that.cur.con.menu = false;
 			$(that.canvas).bind( "mousemove", function( event ){
-			    var _x = event.offsetX || event.layerX;
-			    var _y = event.offsetY || event.layerY;
+			    var _x = event.offsetX;
+			    var _y = event.offsetY;
 			    var o = that.getCirclePoints( that.cur.con.x, that.cur.con.y,
 							    _x, _y, that.r, that.h );
 			    o.x2 = _x;
@@ -152,44 +176,35 @@ function Concept_Map_Canvas( id, tc ){
 	    }
 	});
 
-	//TODO: cpu runs- figure out why
-	$( that.canvas ).siblings( ".controls" ).find( "." + that.tc + "_play" ).
-	    bind( "click", function( ev ){
-		that.replay();
-		$(ev.currentTarget).parent().html( buildControls( that.timedCanvas.ordered_list.length ) );	    
-	    });
-
-	function buildControls( num ){
-	    var $ = jQuery;
+	function buildControls( num, cm_id ){
 	    var i, div = $('<table />').addClass("_cm_controls"),
 	    ul = $('<tr />').addClass("list"),
-	    butt = $('<td />').attr( 'id', that.hid + "pause" ).
-		text( "Pause" ).addClass( that.tc + "pause" ).
+	    butt = $('<td />').attr( 'id', "_cm_canvas_" + cm_id + "pause" ).
+		text( "Pause" ).addClass( "_cm_canvas_pause" ).
 		bind( "click", function( ev ){
 		    var el = jQuery(ev.currentTarget);
 		    if( el.text() === "Pause" ){
-			that.timedCanvas.pause();
+			window.timedCanvas.pause();
 			el.text( "Play" );
 		    } else {
-			that.timedCanvas.start();
+			window.timedCanvas.start();
 			el.text( "Pause" );
 		    }
 		});
 	    ul.append( butt );
 	    for( i = 1; i <= num; i++ ){
-		var el = $('<td/>').attr( 'id', ( that.hid + "seg" + i) ).
+		var el = $('<td/>').attr( 'id', ("_cm_canvas_" + cm_id + "seg" + i) ).
 		    html( "&bull;" );
 		el.bind( "click", function( ev ){
 		    var el = jQuery(ev.currentTarget);
 		    var num = parseInt( el.attr( 'id' ).replace( /.*seg/, "" ), 10 );
-		    that.timedCanvas.controller( num );
+		    window.timedCanvas.controller( num );
 		});
 		ul.append( el );
 	    }
 	    div.append( ul );
 	    return div;
 	}
-
     }(this.canvas, this, window, window.jQuery));
 
     this.getCirclePoints = function( x1, y1, x2, y2, r, h ){
@@ -309,67 +324,70 @@ function Concept_Map_Canvas( id, tc ){
 	});
 
 	//if already going, restart
-	if( !!that.timedCanvas && !!that.timedCanvas.time ){
-	    window.clearTimeout( that.timedCanvas.time );
+	if( !!window.timedCanvas && !!window.timedCanvas.time ){
+	    window.clearTimeout( window.timedCanvas.time );
 	}
 
-	//TODO: put timedCanvas object inside canvas object
-	//TODO: when replaying, set canvas.editable to false
-	that.timedCanvas = {
+	//TODO: rename to within canvas
+	//TODO: after replaying, set canvas.editable to false
+	window.timedCanvas = {
 	    'canv' : that,
 	    'sleep' : 1000,
 	    'ordered_list' : ordered,
-	    'current_step' : 0,
 	    'controller' : (function(){
 		return function( point ){
-		    that.canvas.width = that.w;
-		    drawArr( defaults, that );
-		    drawArr( ordered.slice( 0, point ), that );
-		    that.timedCanvas.tracker( point, ordered.length );
-		    that.timedCanvas.tracker_back( point );
-		    that.timedCanvas.current_step = point;
+		    //window.timedCanvas.pause();
+		    window.timedCanvas.canv.canvas.width = window.timedCanvas.canv.w;
+		    drawArr( defaults, window.timedCanvas.canv );
+		    drawArr( ordered.slice( 0, point ), window.timedCanvas.canv );
+		    window.timedCanvas.tracker( point, ordered.length );
+		    window.timedCanvas.tracker_back( point );
+		    window.timedCanvas.current_step = point;
+		    //window.timedCanvas.start();
 		};
 	    }()),
 	    'pause' : function(){
-		//var that = this;
-		clearTimeout( that.timedCanvas.time );
+		var that = this;
+		window.clearTimeout( that.time );
 	    },
 	    'stop' : function(){
-		that.timedCanvas.pause();
-		jQuery( that.hid + "pause" ).click();
-		that.timedCanvas.current_step = 0;
+		window.timedCanvas.pause();
+		window.jQuery( "#_cm_canvas_" + window.timedCanvas.canv.canvas.id + "pause" ).click();
+		window.timedCanvas.current_step = 0;
 	    },
+	    'current_step' : 0,
 	    'start' : function(){
-		var i;
+		var i, canv = that;
 		//create vars instead of window.[yadda]
-		if( that.timedCanvas.current_step === 0 ){
-		    that.canvas.width = that.w;
-		    that.timedCanvas.tracker( 0, ordered.length );
+		if( window.timedCanvas.current_step === 0 ){
+		    canv.canvas.width = that.w;
+		    window.timedCanvas.tracker( 0, ordered.length );
 		    drawArr( defaults ); //before start
 		}
-		drawArr( ordered.slice( 0, that.timedCanvas.current_step ), that );
-		that.timedCanvas.tracker_back( that.timedCanvas.current_step );
-		that.timedCanvas.current_step++;
-		if( that.timedCanvas.current_step <= ordered.length ){
-		    that.timedCanvas.time = 
-			setTimeout( "window[" + that.tc + "][" + that.hid + "].timedCanvas.start()", that.timedCanvas.sleep );
+		drawArr( ordered.slice( 0, window.timedCanvas.current_step ), canv );
+		window.timedCanvas.tracker_back( window.timedCanvas.current_step );
+		window.timedCanvas.current_step++;
+		if( window.timedCanvas.current_step <= ordered.length ){
+		    window.timedCanvas.time = 
+			window.setTimeout( "window.timedCanvas.start()", window.timedCanvas.sleep );
 		} else {
-		    that.timedCanvas.stop();
+		    window.timedCanvas.stop();
 		}
 	    },
 	    'tracker' : function( point, num ){
 		for( var i = point; i <= num; i++ ){
-		    jQuery( "#" + that.hid + 
-			    "seg" + i ).css( "background", "#FFF" );
+		    window.jQuery( "#_cm_canvas_" + window.timedCanvas.canv.canvas.id + 
+				   "seg" + i ).css( "background", "#FFF" );
 		}
 	    },
 	    'tracker_back' : function( point ){
 		for( var i = 0; i <= point; i++ ){
-		    jQuery( "#"+ that.hid + 
-			    "seg" + i ).css( "background", "#944" );		    
+		    window.jQuery( "#_cm_canvas_" + window.timedCanvas.canv.canvas.id + 
+				   "seg" + i ).css( "background", "#944" );		    
 		}
 	    }
 	}
+	window.timedCanvas.start();
 
 	function drawArr( arr ){
 	    for( i = 0; i < arr.length; i++ ){	    
@@ -392,8 +410,6 @@ function Concept_Map_Canvas( id, tc ){
 		}
 	    }
 	}
-
-	that.timedCanvas.start();
 
     };
 
@@ -490,10 +506,10 @@ function Concept_Map_Canvas( id, tc ){
 	return JSON.stringify( { "arr" : arr, "editable" : that.editable } );
     };
 
-    this.fromJSON = function( json ){
+    this.fromJson = function( json ){
 	var that = this;
 	var obj = JSON.parse( json );
-	var arr = (typeof obj.arr === "string") ? JSON.parse(obj.arr) : obj.arr;
+	var arr = (typeof obj.arr === "string")?JSON.parse(obj.arr):obj.arr;
 	that.editable = obj.editable;
 	that.delete_defaults = obj.delete_defaults;
 	for( var i = 0; i < arr.length; i ++ ){
@@ -750,44 +766,6 @@ function Concept_Map_Canvas( id, tc ){
 
 
 jQuery(function(){
-    var tag_class = "_cm_canvas";
-    window[tag_class] = {};
-    jQuery( "." + tag_class ).each(function( i, el ){
-	el = jQuery( el );
-	id = el.attr( "id" );
-	if( id === undefined || id === "" ){
-	    id = tag_class + i;
-	    el.attr( "id", id );
-	}
-	window[tag_class][id] = new Concept_Map_Canvas( id, tag_class );
-    });
-
-    //TODO: separate following from this file - too specific
-    var canvas = window[tag_class][jQuery( '.' + tag_class ).attr( "id" )];
-    var el = jQuery( '#concept_map' ) || null;
-    if( el !== null && el.length > 0 ){
-	if( el.val().isJSON() ){
-	    //var str = JSON.parse( el.val() );
-	    canvas.fromJSON( el.val() );
-	    /*if( str.isJSON() ){
-		canvas.fromJson( str );
-	    } else {
-		canvas.fromJson( el.val() );
-	    }*/
-	}
-    } else {
-
-	//TODO: fix this for extracts table
-	var val,i,canv,tmp,els = jQuery( '.map' );
-	for( i = 0; i < els.length; i++ ){
-	    el = jQuery(els[i]);
-	    val = el.find( '.map_values' ).val();
-	    canv = el.find( '.' + tag_class ).attr( 'id' );
-	    tmp = window[tag_class][canv];
-	    tmp.fromJSON( val );
-	}
-
-
-    }
-
+    var id = 'concept_map_canvas';
+    window[id] = new Concept_Map_Canvas( id );
 });
